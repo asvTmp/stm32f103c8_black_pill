@@ -12,7 +12,7 @@
 First project  
 Use CMSIS  
 - [x] empty
-- [ ] clock
+- [x] clock
 - [ ] gpio
 - [ ] uart
 
