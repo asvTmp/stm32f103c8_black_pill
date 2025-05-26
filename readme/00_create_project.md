@@ -6,10 +6,10 @@
 
 Все необходимые ресурсы можно скачать с сайта [st.com](https://www.st.com/content/st_com/en.html), и вот что понадобится:
 
-* [Среда разработки STM32CubeIDE](https://www.st.com/content/st_com/en/products/development-tools/software-development-tools/stm32-software-development-tools/stm32-ides/stm32cubeide.html)
+* [Среда разработки STM32CubeIDE](https://www.st.com/content/st_com/en/products/development-tools/software-development-tools/stm32-software-development-tools/stm32-ides/stm32cubeide.html)   
     ![](./img/img001_ide_download.png)   
     Я использую Windows
-* [Библиотека CMSIS для ARM Cortex-M3](https://www.st.com/en/embedded-software/stm32cubef1.html), она находится в архиве STM32CubeF1 / \STM32Cube_FW_F1_V1.8.0\
+* [Библиотека CMSIS для ARM Cortex-M3](https://www.st.com/en/embedded-software/stm32cubef1.html), она находится в архиве STM32CubeF1 / \STM32Cube_FW_F1_V1.8.0\    
     ![](./img/img002_CMSIS.png)  
     Так же все необходимаые файлы можно скачать с гита:   
     * [STM32CubeF1](https://github.com/STMicroelectronics/STM32CubeF1)  
