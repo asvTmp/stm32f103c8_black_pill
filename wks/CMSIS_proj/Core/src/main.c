@@ -77,6 +77,30 @@ void PortSetLow(void) {
 	GPIOB->BRR = (1<<12);
 }
 
+void BlinkLed(int t_delay) {
+	PortSetHi();
+	for(int i=0; i<t_delay; i++);
+	PortSetLow();
+	for(int i=0; i<t_delay; i++);
+	PortSetHi();
+}
+
+void BlinkSOS(void) {
+	BlinkLed(0x100000);
+	BlinkLed(0x100000);
+	BlinkLed(0x100000);
+
+	BlinkLed(0x200000);
+	BlinkLed(0x200000);
+	BlinkLed(0x200000);
+
+	BlinkLed(0x100000);
+	BlinkLed(0x100000);
+	BlinkLed(0x100000);
+
+	for(int i=0; i<0x300000; i++);
+}
+
 int main() {
 	int status;
 	int i;
@@ -86,9 +110,6 @@ int main() {
 	PortInit();
 
 	while(1) {
-		PortSetHi();
-		for(i=0; i<0x100000; i++);
-		PortSetLow();
-		for(i=0; i<0x100000; i++);
+		BlinkSOS();
 	}
 }
