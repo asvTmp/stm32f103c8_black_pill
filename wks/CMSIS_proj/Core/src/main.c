@@ -61,10 +61,34 @@ int ClockInit(void) {
 	return 0;
 }
 
+void PortInit(void) {
+	RCC->APB2ENR |= RCC_APB2ENR_IOPBEN; //Включаем тактирование порта GPIOB
+	GPIOB->CRH &= ~(GPIO_CRH_MODE12 | GPIO_CRH_CNF12); //для начала все сбрасываем в ноль
+	//MODE: выход с максимальной частотой 2 МГц
+	//CNF: режим push-pull
+	GPIOB->CRH |= (0x02 << GPIO_CRH_MODE12_Pos) | (0x00 << GPIO_CRH_CNF12_Pos);
+}
+
+void PortSetHi(void) {
+	GPIOB->BSRR = (1<<12);
+}
+
+void PortSetLow(void) {
+	GPIOB->BRR = (1<<12);
+}
+
 int main() {
 	int status;
+	int i;
 
 	status = ClockInit();
 
-    while(1);
+	PortInit();
+
+	while(1) {
+		PortSetHi();
+		for(i=0; i<0x100000; i++);
+		PortSetLow();
+		for(i=0; i<0x100000; i++);
+	}
 }
