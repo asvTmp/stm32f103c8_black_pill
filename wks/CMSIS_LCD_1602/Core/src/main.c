@@ -1,14 +1,6 @@
 #include "stm32f1xx.h"
 #include "main.h"
 
-void PortInit(void) {
-	RCC->APB2ENR |= RCC_APB2ENR_IOPBEN; //Включаем тактирование порта GPIOB
-	GPIOB->CRH &= ~(GPIO_CRH_MODE12 | GPIO_CRH_CNF12); //для начала все сбрасываем в ноль
-	//MODE: выход с максимальной частотой 2 МГц
-	//CNF: режим push-pull
-	GPIOB->CRH |= (0x02 << GPIO_CRH_MODE12_Pos) | (0x00 << GPIO_CRH_CNF12_Pos);
-}
-
 int ClockInit(void) {
 
 	RCC->CR |= (1<<RCC_CR_HSEON_Pos); //Запускаем генератор HSE
@@ -69,51 +61,55 @@ int ClockInit(void) {
 	return 0;
 }
 
-void PortBSetHi(int pin_num) {
-	GPIOB->BSRR = (1<<pin_num);
+void PortInit(void) {
+	RCC->APB2ENR |= RCC_APB2ENR_IOPBEN; //Включаем тактирование порта GPIOB
+	GPIOB->CRH &= ~(GPIO_CRH_MODE12 | GPIO_CRH_CNF12); //для начала все сбрасываем в ноль
+	//MODE: выход с максимальной частотой 2 МГц
+	//CNF: режим push-pull
+	GPIOB->CRH |= (0x02 << GPIO_CRH_MODE12_Pos) | (0x00 << GPIO_CRH_CNF12_Pos);
 }
 
-void PortBSetLow(int pin_num) {
-	GPIOB->BRR = (1<<pin_num);
+void PortSetHi(void) {
+	GPIOB->BSRR = (1<<12);
 }
 
-// Точная задержка на SysTick (72 МГц)
-void delay_ms(uint32_t ms) {
+void PortSetLow(void) {
+	GPIOB->BRR = (1<<12);
+}
+
+void delay_ms(int ms) {
     SysTick->LOAD = 72000;  // 72MHz / 1000
     SysTick->VAL = 0;
-    SysTick->CTRL = SysTick_CTRL_ENABLE_Msk;
+    SysTick->CTRL = SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_CLKSOURCE_Msk;
 
     for(uint32_t i = 0; i < ms; i++) {
         while(!(SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk));
     }
+
     SysTick->CTRL = 0;
 }
 
+void delay_t_delay(int t_delay) {
+	for(int i=0; i<t_delay; i++);
+}
+
+int SysTickInit(void) {
+	SysTick->CTRL = 0;
+}
+
+
 int main() {
 	int status;
-	int t_delay = 0x200000;
+	int i;
 
-	//status = ClockInit();
-
-    // Настройка тактирования (72 МГц)
-    RCC->CFGR |= RCC_CFGR_PLLMULL9; // PLL x9 (8MHz * 9 = 72MHz)
-    RCC->CFGR |= RCC_CFGR_PPRE1_2;  // APB1 = 36MHz
-    RCC->CR |= RCC_CR_PLLON;
-    while(!(RCC->CR & RCC_CR_PLLRDY));
-    RCC->CFGR |= RCC_CFGR_SW_PLL;
-
-    // Настройка SysTick
-    SysTick->CTRL = 0;
-
+	status = ClockInit();
+	SysTickInit();
 	PortInit();
 
 	while(1) {
-		PortBSetHi(LED_PIN);
-		//for(int i=0; i<t_delay; i++);
-		delay_ms(1000);
-		PortBSetLow(LED_PIN);
-		//for(int i=0; i<t_delay; i++);
-		delay_ms(1000);
-
+		delay_ms(500);
+		PortSetHi();
+		delay_ms(500);
+		PortSetLow();
 	}
 }
