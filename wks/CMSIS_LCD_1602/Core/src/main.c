@@ -78,7 +78,7 @@ void PortSetLow(void) {
 }
 
 void delay_ms(int ms) {
-    SysTick->LOAD = 72000;  // 72MHz / 1000
+    SysTick->LOAD = TimerTick;  // 72MHz / 1000
     SysTick->VAL = 0;
     SysTick->CTRL = SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_CLKSOURCE_Msk;
 
