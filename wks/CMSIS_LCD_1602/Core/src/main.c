@@ -62,11 +62,32 @@ int ClockInit(void) {
 }
 
 void PortInit(void) {
-	RCC->APB2ENR |= RCC_APB2ENR_IOPBEN; //Включаем тактирование порта GPIOB
-	GPIOB->CRH &= ~(GPIO_CRH_MODE12 | GPIO_CRH_CNF12); //для начала все сбрасываем в ноль
+	RCC->APB2ENR |= RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPAEN; //Включаем тактирование порта GPIOB и GPIOA
+
+	GPIOB->CRH &= ~(
+			GPIO_CRH_MODE12 | GPIO_CRH_CNF12 |
+			GPIO_CRH_MODE13 | GPIO_CRH_CNF13 |
+			GPIO_CRH_MODE14 | GPIO_CRH_CNF14 |
+			GPIO_CRH_MODE15 | GPIO_CRH_CNF15
+			);
+	//для начала все сбрасываем в ноль
 	//MODE: выход с максимальной частотой 2 МГц
 	//CNF: режим push-pull
-	GPIOB->CRH |= (0x02 << GPIO_CRH_MODE12_Pos) | (0x00 << GPIO_CRH_CNF12_Pos);
+	GPIOB->CRH |= 	(0x02 << GPIO_CRH_MODE12_Pos) | (0x00 << GPIO_CRH_CNF12_Pos) |
+					(0x02 << GPIO_CRH_MODE13_Pos) | (0x00 << GPIO_CRH_CNF13_Pos) |
+					(0x02 << GPIO_CRH_MODE14_Pos) | (0x00 << GPIO_CRH_CNF14_Pos) |
+					(0x02 << GPIO_CRH_MODE15_Pos) | (0x00 << GPIO_CRH_CNF15_Pos) ;
+
+    // Настройка PA0-PA5 как выходы Push-Pull, 2MHz
+    GPIOA->CRL &= ~(0xFFFFFF << 0);
+    GPIOA->CRL |= 0x222222 << 0;
+
+    LCD_RS_LOW();
+    LCD_RW_LOW();
+    LCD_E_LOW();
+
+    GPIOA->BSRR = (0x0F << 16) << LCD_D4_PIN; // Сбросить все биты
+
 }
 
 void PortSetHi(void) {
@@ -98,6 +119,64 @@ int SysTickInit(void) {
 }
 
 
+// Установка 4 бит данных
+void LCD_Write4Bits(uint8_t data) {
+    GPIOA->BSRR = (0x0F << 16) << LCD_D4_PIN; // Сбросить все биты
+    GPIOA->BSRR = ((data & 0x01) << LCD_D4_PIN) |
+                  ((data & 0x02) << LCD_D5_PIN) |
+                  ((data & 0x04) << LCD_D6_PIN) |
+                  ((data & 0x08) << LCD_D7_PIN);
+}
+
+// Импульс на Enable
+void LCD_PulseEnable() {
+    LCD_E_HIGH();
+    delay_ms(1);
+    LCD_E_LOW();
+    delay_ms(1);
+}
+
+// Отправка команды/данных
+void LCD_Send(uint8_t value, uint8_t mode) {
+    if(mode) LCD_RS_HIGH();
+    else LCD_RS_LOW();
+
+    LCD_Write4Bits(value >> 4); // Старшие 4 бита
+    LCD_PulseEnable();
+
+    LCD_Write4Bits(value);      // Младшие 4 бита
+    LCD_PulseEnable();
+
+    delay_ms(1);
+}
+
+void LCD_init() {
+	delay_ms(50);
+    // Последовательность инициализации 4-битного режима
+	LCD_Send(0x03, 0);
+
+    LCD_Send(0x03, 0);
+
+    LCD_Send(0x03, 0);
+
+    LCD_Send(0x02, 0); // Переход в 4-битный режим
+
+    // Конфигурация дисплея
+    LCD_Send(0x28, 0); // 4 бита, 2 строки, шрифт 5x8
+    LCD_Send(0x0C, 0); // Дисплей включен, курсор выключен
+    LCD_Send(0x06, 0); // Автоинкремент курсора
+    LCD_Send(0x01, 0); // Очистка экрана
+
+    delay_ms(5);
+}
+
+// Вывод строки
+void LCD_Print(const char *str) {
+    while(*str) {
+        LCD_Send(*str++, 1);
+    }
+}
+
 int main() {
 	int status;
 	int i;
@@ -105,6 +184,12 @@ int main() {
 	status = ClockInit();
 	SysTickInit();
 	PortInit();
+	LCD_init();
+
+    LCD_Send(0x80, 0); // Первая строка
+    LCD_Print("STM32F103C8");
+    LCD_Send(0xC0, 0); // Вторая строка
+    LCD_Print("Black Pill");
 
 	while(1) {
 		delay_ms(500);
