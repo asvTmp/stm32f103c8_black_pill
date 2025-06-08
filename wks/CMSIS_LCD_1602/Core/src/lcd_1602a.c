@@ -102,7 +102,7 @@ void delay_us_tt(uint32_t us) {
 }
 
 void delay_us(int us) {
-	delay_us_tt(us);
+	delay_us_st(us);
 }
 
 void delay_ms(int ms) {
@@ -116,19 +116,6 @@ void delay_t_delay(int t_delay) {
 
 void SysTickInit(void) {
 	SysTick->CTRL = 0;
-}
-
-// Установка 4 бит данных
-void LCD_Write4Bits_old(uint8_t data) {
-    GPIOA->BRR =  ((0x01) << LCD_D4_PIN) |
-                  ((0x01) << LCD_D5_PIN) |
-                  ((0x01) << LCD_D6_PIN) |
-                  ((0x01) << LCD_D7_PIN) ;
-
-    GPIOA->BSRR = ((data & 0x01) << LCD_D4_PIN) |
-                  ((data & 0x02) << LCD_D5_PIN) |
-                  ((data & 0x04) << LCD_D6_PIN) |
-                  ((data & 0x08) << LCD_D7_PIN) ;
 }
 
 // Установка 4 бит данных
@@ -234,14 +221,41 @@ void LCD_clear() {
 	LCD_Send_CMD(0x01);
 }
 
+void blink_led_one(int t) {
+	delay_ms(t);
+	PortSetHi();
+	delay_ms(t);
+	PortSetLow();
+}
+
+BlinkDelay blink_led(BlinkDelay delay_x) {
+	blink_led_one(delay_x.value);
+
+	if (delay_x.value > MAX_DELAY) delay_x.step = -STEP_DELAY;
+	if (delay_x.value < MIN_DELAY) delay_x.step = STEP_DELAY;
+
+	delay_x.value += delay_x.step;
+
+	return delay_x;
+}
+
+// Установка позиции курсора
+void LCD_SetCursor(uint8_t row, uint8_t col) {
+    uint8_t address;
+    if(row == 0) address = 0x80 + col;
+    else address = 0xC0 + col;
+    LCD_Send_CMD(address);
+}
+
 int main_lcd_1602a() {
-	//	status = ClockInit();
-	//	SysTickInit();
+	int status;
+	status = ClockInit();
+	SysTickInit();
 	LCD_init();
 
-	LCD_Send_CMD(0x80); // Первая строка
+	LCD_SetCursor(0, 2); // Первая строка
 	LCD_Print("Black Pill");
-	LCD_Send_CMD(0xC0); // Вторая строка
+	LCD_SetCursor(1, 4); // Вторая строка
 	LCD_Print("STM32F103C8");
 
 	return 0;

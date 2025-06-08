@@ -5,6 +5,8 @@
  *      Author: asv
  */
 
+#include "stm32f1xx.h"
+
 #ifndef INC_LCD_1602A_H_
 #define INC_LCD_1602A_H_
 
@@ -12,11 +14,40 @@
 	#define TimerTick  		F_CPU/1000-1	// Нам нужен килогерц
 	#define TimerTickUs  	F_CPU/1000000-1	// Нам нужен килогерц
 
+	#define START_DELAY 500
+	#define STEP_DELAY 0
+	#define MAX_DELAY 1000
+	#define MIN_DELAY 100
+
+	typedef struct {
+	    int value;
+	    int step;
+	} BlinkDelay;
+
 	int ClockInit(void);
+	void PortInit(void);
+	void PortSetHi(void);
+	void PortSetLow(void);
 	void BlinkLed(int);
+	void delay_us(int);
 	void delay_ms(int);
-	void delay_t_delay(int);
 	void SysTickInit(void);
+
+	void LCD_Write4Bit(uint8_t data);
+	void LCD_PulseEnable();
+	void LCD_Send(uint8_t value, uint8_t mode);
+	void LCD_Send_CMD(uint8_t cmd);
+	void LCD_Send_DATA(uint8_t value);
+	void LCD_Send_DATA(uint8_t value);
+	void LCD_init();
+	void LCD_Print(const char *str);
+	void LCD_clear();
+	void blink_led_one(int t);
+
+
+
+	BlinkDelay blink_led(BlinkDelay);
+	int main_lcd_1602a();
 
 	// Определение пинов
 	#define LCD_RS_PIN  14  // PB14
